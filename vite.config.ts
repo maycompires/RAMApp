@@ -16,6 +16,7 @@ export default defineConfig({
       'react-router-dom',
       'leaflet',
       'react-leaflet',
+      'leaflet-defaulticon-compatibility',
     ],
   },
 });

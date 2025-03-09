@@ -23,14 +23,15 @@ interface NewAlert {
 
 function AlertsPage() {
   const [alerts, setAlerts] = useState<Alert[]>([]);
-  const [editingAlert, setEditingAlert] = useState<Alert | null>(null);
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [newAlert, setNewAlert] = useState<NewAlert>({
+  const [showModal, setShowModal] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [currentAlert, setCurrentAlert] = useState<NewAlert>({
     title: '',
     description: '',
     riskLevel: 'medium',
     radius: 15,
   });
+  const [editingId, setEditingId] = useState<number | null>(null);
 
   useEffect(() => {
     const savedAlerts = localStorage.getItem('alerts');
@@ -57,36 +58,60 @@ function AlertsPage() {
     return ['low', 'medium', 'high'].includes(level || '') ? level : 'medium';
   };
 
-  const handleCreateAlert = (e: FormEvent<HTMLFormElement>) => {
+  const handleSaveAlert = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          const { title, description, riskLevel, radius } = newAlert;
+          const { title, description, riskLevel, radius } = currentAlert;
 
           if (!title.trim() || !description.trim()) {
             alert('Title and description are required!');
             return;
           }
 
-          const validatedAlert: Alert = {
-            id: Date.now(),
-            title: title.trim(),
-            description: description.trim(),
-            riskLevel: validateRiskLevel(riskLevel) || 'medium',
-            radius: Math.min(Math.max(0, radius), 30),
-            location: {
-              lat: position.coords.latitude,
-              lng: position.coords.longitude,
-            },
-            timestamp: new Date().toISOString(),
-          };
+          if (isEditing && editingId !== null) {
+            // Update existing alert
+            const updatedAlert = alerts.find(a => a.id === editingId);
+            
+            if (updatedAlert) {
+              const editedAlert: Alert = {
+                ...updatedAlert,
+                title: title.trim(),
+                description: description.trim(),
+                riskLevel: validateRiskLevel(riskLevel) || 'medium',
+                radius: Math.min(Math.max(0, radius), 30),
+              };
 
-          const updatedAlerts = [...alerts, validatedAlert];
-          setAlerts(updatedAlerts);
-          localStorage.setItem('alerts', JSON.stringify(updatedAlerts));
-          setNewAlert({ title: '', description: '', riskLevel: 'medium', radius: 15 });
-          setShowCreateModal(false);
+              const updatedAlerts = alerts.map((a) => (a.id === editingId ? editedAlert : a));
+              setAlerts(updatedAlerts);
+              localStorage.setItem('alerts', JSON.stringify(updatedAlerts));
+            }
+          } else {
+            // Create new alert
+            const newAlertObj: Alert = {
+              id: Date.now(),
+              title: title.trim(),
+              description: description.trim(),
+              riskLevel: validateRiskLevel(riskLevel) || 'medium',
+              radius: Math.min(Math.max(0, radius), 30),
+              location: {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude,
+              },
+              timestamp: new Date().toISOString(),
+            };
+
+            const updatedAlerts = [...alerts, newAlertObj];
+            setAlerts(updatedAlerts);
+            localStorage.setItem('alerts', JSON.stringify(updatedAlerts));
+          }
+
+          // Reset state and close modal
+          setCurrentAlert({ title: '', description: '', riskLevel: 'medium', radius: 15 });
+          setShowModal(false);
+          setIsEditing(false);
+          setEditingId(null);
         },
         (error) => {
           alert('Failed to get location: ' + error.message);
@@ -97,30 +122,16 @@ function AlertsPage() {
     }
   };
 
-  const handleEditAlert = (alert: Alert) => {
-    // Mantém a lógica de edição com prompts por enquanto
-    const title = prompt('Edit alert title:', alert.title);
-    if (!title) return;
-
-    const description = prompt('Edit alert description:', alert.description);
-    if (!description) return;
-
-    const riskInput = prompt('Edit risk level (low, medium, high):', alert.riskLevel);
-    const radiusInput = prompt('Edit radius (0-30 meters):', alert.radius.toString());
-    const radius = radiusInput ? parseInt(radiusInput) : alert.radius;
-
-    const updatedAlert: Alert = {
-      ...alert,
-      title: title.trim(),
-      description: description.trim(),
-      riskLevel: validateRiskLevel(riskInput) || 'medium',
-      radius: Math.min(Math.max(0, radius), 30),
-    };
-
-    const updatedAlerts = alerts.map((a) => (a.id === alert.id ? updatedAlert : a));
-    setAlerts(updatedAlerts);
-    localStorage.setItem('alerts', JSON.stringify(updatedAlerts));
-    setEditingAlert(null);
+  const handleEditClick = (alert: Alert) => {
+    setIsEditing(true);
+    setEditingId(alert.id);
+    setCurrentAlert({
+      title: alert.title,
+      description: alert.description,
+      riskLevel: alert.riskLevel,
+      radius: alert.radius
+    });
+    setShowModal(true);
   };
 
   const handleDeleteAlert = (id: number) => {
@@ -131,10 +142,22 @@ function AlertsPage() {
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setNewAlert((prev) => ({
+    setCurrentAlert((prev) => ({
       ...prev,
       [name]: name === 'radius' ? parseInt(value) || 0 : value,
     }));
+  };
+
+  const handleCreateNewClick = () => {
+    setIsEditing(false);
+    setEditingId(null);
+    setCurrentAlert({
+      title: '',
+      description: '',
+      riskLevel: 'medium',
+      radius: 15
+    });
+    setShowModal(true);
   };
 
   return (
@@ -142,7 +165,7 @@ function AlertsPage() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-gray-800">Alerts</h1>
         <button
-          onClick={() => setShowCreateModal(true)}
+          onClick={handleCreateNewClick}
           className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 flex items-center"
         >
           <Bell className="w-5 h-5 mr-2" />
@@ -150,18 +173,20 @@ function AlertsPage() {
         </button>
       </div>
 
-      {/* Modal para criação de alertas */}
-      {showCreateModal && (
+      {/* Modal for creating or editing alerts */}
+      {showModal && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h2 className="text-2xl font-bold mb-4">Create New Alert</h2>
-            <form onSubmit={handleCreateAlert}>
+            <h2 className="text-2xl font-bold mb-4">
+              {isEditing ? 'Edit Alert' : 'Create New Alert'}
+            </h2>
+            <form onSubmit={handleSaveAlert}>
               <div className="mb-4">
                 <label className="block text-gray-700 mb-1">Title</label>
                 <input
                   type="text"
                   name="title"
-                  value={newAlert.title}
+                  value={currentAlert.title}
                   onChange={handleInputChange}
                   className="w-full p-2 border rounded"
                   required
@@ -171,7 +196,7 @@ function AlertsPage() {
                 <label className="block text-gray-700 mb-1">Description</label>
                 <textarea
                   name="description"
-                  value={newAlert.description}
+                  value={currentAlert.description}
                   onChange={handleInputChange}
                   className="w-full p-2 border rounded"
                   rows={3}
@@ -182,7 +207,7 @@ function AlertsPage() {
                 <label className="block text-gray-700 mb-1">Risk Level</label>
                 <select
                   name="riskLevel"
-                  value={newAlert.riskLevel}
+                  value={currentAlert.riskLevel}
                   onChange={handleInputChange}
                   className="w-full p-2 border rounded"
                 >
@@ -196,7 +221,7 @@ function AlertsPage() {
                 <input
                   type="number"
                   name="radius"
-                  value={newAlert.radius}
+                  value={currentAlert.radius}
                   onChange={handleInputChange}
                   min="0"
                   max="30"
@@ -207,7 +232,12 @@ function AlertsPage() {
               <div className="flex justify-end space-x-2">
                 <button
                   type="button"
-                  onClick={() => setShowCreateModal(false)}
+                  onClick={() => {
+                    setShowModal(false);
+                    setIsEditing(false);
+                    setEditingId(null);
+                    setCurrentAlert({ title: '', description: '', riskLevel: 'medium', radius: 15 });
+                  }}
                   className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
                 >
                   Cancel
@@ -216,7 +246,7 @@ function AlertsPage() {
                   type="submit"
                   className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
                 >
-                  Create
+                  {isEditing ? 'Save Changes' : 'Create'}
                 </button>
               </div>
             </form>
@@ -247,7 +277,7 @@ function AlertsPage() {
               </div>
               <div className="flex space-x-2">
                 <button
-                  onClick={() => handleEditAlert(alert)}
+                  onClick={() => handleEditClick(alert)}
                   className="text-blue-500 hover:text-blue-600 p-2"
                 >
                   <Edit className="w-5 h-5" />
