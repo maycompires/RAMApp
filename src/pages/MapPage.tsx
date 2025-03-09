@@ -76,10 +76,10 @@ function DraggableMarker({ alert, onMarkerDrag }: {
           <h3 className="font-bold">{alert.title}</h3>
           <p className="text-sm">{alert.description}</p>
           <p className="text-sm mt-2">
-            Risk Level: <span className="font-semibold capitalize">{alert.riskLevel}</span>
+            Nivel de Risco: <span className="font-semibold capitalize">{alert.riskLevel}</span>
           </p>
           <p className="text-sm">
-            Radius: <span className="font-semibold">{DEFAULT_RADIUS}m</span>
+            Raio: <span className="font-semibold">{DEFAULT_RADIUS}m</span>
           </p>
           <p className="text-xs mt-2 text-gray-500">
             Arraste para reposicionar este alerta
