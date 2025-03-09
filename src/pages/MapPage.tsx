@@ -22,7 +22,7 @@ function MapPage() {
     <div className="h-[calc(100vh-12rem)]">
       <div className="bg-white rounded-lg shadow-md p-4 h-full">
         <MapContainer
-          center={[-23.550520, -46.633308]}
+          center={[ -27.5969, -48.5495]}
           zoom={13}
           style={{ height: '100%', width: '100%' }}
         >

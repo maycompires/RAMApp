@@ -9,7 +9,6 @@ function AlertsPage() {
     title: '',
     description: '',
     riskLevel: 'medium',
-    radius: 15,
   });
 
   useEffect(() => {
@@ -42,10 +41,10 @@ function AlertsPage() {
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          const { title, description, riskLevel, radius } = newAlert;
+          const { title, description, riskLevel } = newAlert;
 
           if (!title.trim() || !description.trim()) {
-            alert('Title and description are required!');
+            alert('Título e descrição são obrigatórios!');
             return;
           }
 
@@ -54,7 +53,6 @@ function AlertsPage() {
             title: title.trim(),
             description: description.trim(),
             riskLevel: validateRiskLevel(riskLevel),
-            radius: Math.min(Math.max(0, radius), 30),
             location: {
               lat: position.coords.latitude,
               lng: position.coords.longitude,
@@ -65,35 +63,34 @@ function AlertsPage() {
           const updatedAlerts = [...alerts, validatedAlert];
           setAlerts(updatedAlerts);
           localStorage.setItem('alerts', JSON.stringify(updatedAlerts));
-          setNewAlert({ title: '', description: '', riskLevel: 'medium', radius: 15 });
+          setNewAlert({ title: '', description: '', riskLevel: 'medium' });
           setShowCreateModal(false);
         },
         (error) => {
-          alert('Failed to get location: ' + error.message);
+          alert('Falha ao obter localização: ' + error.message);
         }
       );
     } else {
-      alert('Geolocation is not supported by your browser');
+      alert('Geolocalização não é suportada pelo seu navegador');
     }
   };
 
   const handleEditAlert = (alert) => {
-    // Mantém a lógica de edição com prompts por enquanto
-    const title = prompt('Edit alert title:', alert.title);
+    const title = prompt('Editar título do alerta:', alert.title);
     if (!title) return;
 
-    const description = prompt('Edit alert description:', alert.description);
+    const description = prompt('Editar descrição do alerta:', alert.description);
     if (!description) return;
 
-    const riskInput = prompt('Edit risk level (low, medium, high):', alert.riskLevel);
-    const radius = parseInt(prompt('Edit radius (0-30 meters):', alert.radius));
+    const riskInput = prompt('Editar nível de risco (baixo, médio, alto):', alert.riskLevel);
+    const radius = alert.radius ? parseInt(prompt('Editar raio (0-30 metros):', alert.radius)) : null;
 
     const updatedAlert = {
       ...alert,
       title: title.trim(),
       description: description.trim(),
       riskLevel: validateRiskLevel(riskInput),
-      radius: Math.min(Math.max(0, radius || alert.radius), 30),
+      ...(radius !== null && { radius: Math.min(Math.max(0, radius || alert.radius), 30) }),
     };
 
     const updatedAlerts = alerts.map((a) => (a.id === alert.id ? updatedAlert : a));
@@ -112,20 +109,20 @@ function AlertsPage() {
     const { name, value } = e.target;
     setNewAlert((prev) => ({
       ...prev,
-      [name]: name === 'radius' ? parseInt(value) || 0 : value,
+      [name]: value,
     }));
   };
 
   return (
     <div className="max-w-4xl mx-auto">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-800">Alerts</h1>
+        <h1 className="text-3xl font-bold text-gray-800">Alertas</h1>
         <button
           onClick={() => setShowCreateModal(true)}
           className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 flex items-center"
         >
           <Bell className="w-5 h-5 mr-2" />
-          Create Alert
+          Criar Alerta
         </button>
       </div>
 
@@ -133,10 +130,10 @@ function AlertsPage() {
       {showCreateModal && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h2 className="text-2xl font-bold mb-4">Create New Alert</h2>
+            <h2 className="text-2xl font-bold mb-4">Criar Novo Alerta</h2>
             <form onSubmit={handleCreateAlert}>
               <div className="mb-4">
-                <label className="block text-gray-700 mb-1">Title</label>
+                <label className="block text-gray-700 mb-1">Título</label>
                 <input
                   type="text"
                   name="title"
@@ -147,7 +144,7 @@ function AlertsPage() {
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-gray-700 mb-1">Description</label>
+                <label className="block text-gray-700 mb-1">Descrição</label>
                 <textarea
                   name="description"
                   value={newAlert.description}
@@ -158,30 +155,17 @@ function AlertsPage() {
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-gray-700 mb-1">Risk Level</label>
+                <label className="block text-gray-700 mb-1">Nível de Risco</label>
                 <select
                   name="riskLevel"
                   value={newAlert.riskLevel}
                   onChange={handleInputChange}
                   className="w-full p-2 border rounded"
                 >
-                  <option value="low">Low</option>
-                  <option value="medium">Medium</option>
-                  <option value="high">High</option>
+                  <option value="low">Baixo</option>
+                  <option value="medium">Médio</option>
+                  <option value="high">Alto</option>
                 </select>
-              </div>
-              <div className="mb-4">
-                <label className="block text-gray-700 mb-1">Radius (0-30 meters)</label>
-                <input
-                  type="number"
-                  name="radius"
-                  value={newAlert.radius}
-                  onChange={handleInputChange}
-                  min="0"
-                  max="30"
-                  className="w-full p-2 border rounded"
-                  required
-                />
               </div>
               <div className="flex justify-end space-x-2">
                 <button
@@ -189,13 +173,13 @@ function AlertsPage() {
                   onClick={() => setShowCreateModal(false)}
                   className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
                 >
-                  Cancel
+                  Cancelar
                 </button>
                 <button
                   type="submit"
                   className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
                 >
-                  Create
+                  Criar
                 </button>
               </div>
             </form>
@@ -215,13 +199,13 @@ function AlertsPage() {
                       alert.riskLevel
                     )}`}
                   >
-                    {alert.riskLevel?.charAt(0).toUpperCase() + alert.riskLevel?.slice(1)} Risk
+                    Risco {alert.riskLevel?.charAt(0).toUpperCase() + alert.riskLevel?.slice(1)}
                   </span>
                 </div>
                 <p className="text-gray-600 mt-2">{alert.description}</p>
-                <p className="text-sm text-gray-500 mt-2">Radius: {alert.radius}m</p>
+                {alert.radius && <p className="text-sm text-gray-500 mt-2">Raio: {alert.radius}m</p>}
                 <p className="text-sm text-gray-500">
-                  {new Date(alert.timestamp).toLocaleString()}
+                  {new Date(alert.timestamp).toLocaleString('pt-BR')}
                 </p>
               </div>
               <div className="flex space-x-2">
@@ -245,7 +229,7 @@ function AlertsPage() {
         {alerts.length === 0 && (
           <div className="text-center py-8 bg-gray-50 rounded-lg">
             <Bell className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-600">No alerts yet. Create one to get started!</p>
+            <p className="text-gray-600">Nenhum alerta ainda. Crie um para começar!</p>
           </div>
         )}
       </div>
