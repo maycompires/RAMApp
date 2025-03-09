@@ -4,6 +4,13 @@ import { Bell, Trash2, Edit } from 'lucide-react';
 function AlertsPage() {
   const [alerts, setAlerts] = useState([]);
   const [editingAlert, setEditingAlert] = useState(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [newAlert, setNewAlert] = useState({
+    title: '',
+    description: '',
+    riskLevel: 'medium',
+    radius: 15,
+  });
 
   useEffect(() => {
     const savedAlerts = localStorage.getItem('alerts');
@@ -30,46 +37,53 @@ function AlertsPage() {
     return ['low', 'medium', 'high'].includes(level) ? level : 'medium';
   };
 
-  const handleCreateAlert = () => {
+  const handleCreateAlert = (e) => {
+    e.preventDefault();
     if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition((position) => {
-        const title = prompt('Enter alert title:');
-        if (!title) return; // Cancel if no title
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { title, description, riskLevel, radius } = newAlert;
 
-        const description = prompt('Enter alert description:');
-        if (!description) return; // Cancel if no description
+          if (!title.trim() || !description.trim()) {
+            alert('Title and description are required!');
+            return;
+          }
 
-        const riskInput = prompt('Enter risk level (low, medium, high):');
-        const radius = parseInt(prompt('Enter radius (0-30 meters):')) || 15;
+          const validatedAlert = {
+            id: Date.now(),
+            title: title.trim(),
+            description: description.trim(),
+            riskLevel: validateRiskLevel(riskLevel),
+            radius: Math.min(Math.max(0, radius), 30),
+            location: {
+              lat: position.coords.latitude,
+              lng: position.coords.longitude,
+            },
+            timestamp: new Date().toISOString(),
+          };
 
-        const newAlert = {
-          id: Date.now(),
-          title: title.trim(),
-          description: description.trim(),
-          riskLevel: validateRiskLevel(riskInput),
-          radius: Math.min(Math.max(0, radius), 30), // Clamp between 0 and 30
-          location: {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
-          },
-          timestamp: new Date().toISOString()
-        };
-
-        const updatedAlerts = [...alerts, newAlert];
-        setAlerts(updatedAlerts);
-        localStorage.setItem('alerts', JSON.stringify(updatedAlerts));
-      });
+          const updatedAlerts = [...alerts, validatedAlert];
+          setAlerts(updatedAlerts);
+          localStorage.setItem('alerts', JSON.stringify(updatedAlerts));
+          setNewAlert({ title: '', description: '', riskLevel: 'medium', radius: 15 });
+          setShowCreateModal(false);
+        },
+        (error) => {
+          alert('Failed to get location: ' + error.message);
+        }
+      );
     } else {
       alert('Geolocation is not supported by your browser');
     }
   };
 
   const handleEditAlert = (alert) => {
+    // Mantém a lógica de edição com prompts por enquanto
     const title = prompt('Edit alert title:', alert.title);
-    if (!title) return; // Cancel if no title
+    if (!title) return;
 
     const description = prompt('Edit alert description:', alert.description);
-    if (!description) return; // Cancel if no description
+    if (!description) return;
 
     const riskInput = prompt('Edit risk level (low, medium, high):', alert.riskLevel);
     const radius = parseInt(prompt('Edit radius (0-30 meters):', alert.radius));
@@ -79,22 +93,27 @@ function AlertsPage() {
       title: title.trim(),
       description: description.trim(),
       riskLevel: validateRiskLevel(riskInput),
-      radius: Math.min(Math.max(0, radius || alert.radius), 30) // Clamp between 0 and 30
+      radius: Math.min(Math.max(0, radius || alert.radius), 30),
     };
 
-    const updatedAlerts = alerts.map(a => 
-      a.id === alert.id ? updatedAlert : a
-    );
-
+    const updatedAlerts = alerts.map((a) => (a.id === alert.id ? updatedAlert : a));
     setAlerts(updatedAlerts);
     localStorage.setItem('alerts', JSON.stringify(updatedAlerts));
     setEditingAlert(null);
   };
 
   const handleDeleteAlert = (id) => {
-    const updatedAlerts = alerts.filter(alert => alert.id !== id);
+    const updatedAlerts = alerts.filter((alert) => alert.id !== id);
     setAlerts(updatedAlerts);
     localStorage.setItem('alerts', JSON.stringify(updatedAlerts));
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setNewAlert((prev) => ({
+      ...prev,
+      [name]: name === 'radius' ? parseInt(value) || 0 : value,
+    }));
   };
 
   return (
@@ -102,7 +121,7 @@ function AlertsPage() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-gray-800">Alerts</h1>
         <button
-          onClick={handleCreateAlert}
+          onClick={() => setShowCreateModal(true)}
           className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 flex items-center"
         >
           <Bell className="w-5 h-5 mr-2" />
@@ -110,21 +129,97 @@ function AlertsPage() {
         </button>
       </div>
 
+      {/* Modal para criação de alertas */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h2 className="text-2xl font-bold mb-4">Create New Alert</h2>
+            <form onSubmit={handleCreateAlert}>
+              <div className="mb-4">
+                <label className="block text-gray-700 mb-1">Title</label>
+                <input
+                  type="text"
+                  name="title"
+                  value={newAlert.title}
+                  onChange={handleInputChange}
+                  className="w-full p-2 border rounded"
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-gray-700 mb-1">Description</label>
+                <textarea
+                  name="description"
+                  value={newAlert.description}
+                  onChange={handleInputChange}
+                  className="w-full p-2 border rounded"
+                  rows="3"
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-gray-700 mb-1">Risk Level</label>
+                <select
+                  name="riskLevel"
+                  value={newAlert.riskLevel}
+                  onChange={handleInputChange}
+                  className="w-full p-2 border rounded"
+                >
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                </select>
+              </div>
+              <div className="mb-4">
+                <label className="block text-gray-700 mb-1">Radius (0-30 meters)</label>
+                <input
+                  type="number"
+                  name="radius"
+                  value={newAlert.radius}
+                  onChange={handleInputChange}
+                  min="0"
+                  max="30"
+                  className="w-full p-2 border rounded"
+                  required
+                />
+              </div>
+              <div className="flex justify-end space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setShowCreateModal(false)}
+                  className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                >
+                  Create
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       <div className="space-y-4">
-        {alerts.map(alert => (
+        {alerts.map((alert) => (
           <div key={alert.id} className="bg-white rounded-lg shadow-md p-4">
             <div className="flex justify-between items-start">
               <div className="flex-1">
                 <div className="flex items-center gap-3">
                   <h3 className="text-xl font-semibold text-gray-800">{alert.title}</h3>
-                  <span className={`px-2 py-1 rounded-full text-sm font-medium ${getRiskColor(alert.riskLevel)}`}>
+                  <span
+                    className={`px-2 py-1 rounded-full text-sm font-medium ${getRiskColor(
+                      alert.riskLevel
+                    )}`}
+                  >
                     {alert.riskLevel?.charAt(0).toUpperCase() + alert.riskLevel?.slice(1)} Risk
                   </span>
                 </div>
                 <p className="text-gray-600 mt-2">{alert.description}</p>
-                <p className="text-sm text-gray-500 mt-2">
-                  Radius: {alert.radius}m
-                </p>
+                <p className="text-sm text-gray-500 mt-2">Radius: {alert.radius}m</p>
                 <p className="text-sm text-gray-500">
                   {new Date(alert.timestamp).toLocaleString()}
                 </p>

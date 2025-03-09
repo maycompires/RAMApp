@@ -1,0 +1,364 @@
+import React, { useState, useEffect } from 'react';
+import { Bell, Trash2, Edit, X, AlertTriangle } from 'lucide-react';
+
+// Define types for our alert data
+type RiskLevel = 'low' | 'medium' | 'high';
+
+type Location = {
+  lat: number;
+  lng: number;
+};
+
+type Alert = {
+  id: number;
+  title: string;
+  description: string;
+  riskLevel: RiskLevel;
+  radius: number;
+  location: Location;
+  timestamp: string;
+};
+
+type AlertFormData = {
+  title: string;
+  description: string;
+  riskLevel: RiskLevel;
+  radius: number;
+};
+
+function AlertsPage() {
+  const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [editingAlert, setEditingAlert] = useState<Alert | null>(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [formData, setFormData] = useState<AlertFormData>({
+    title: '',
+    description: '',
+    riskLevel: 'medium',
+    radius: 15
+  });
+  const [isLoading, setIsLoading] = useState(false);
+  const [formError, setFormError] = useState('');
+
+  useEffect(() => {
+    const savedAlerts = localStorage.getItem('alerts');
+    if (savedAlerts) {
+      setAlerts(JSON.parse(savedAlerts));
+    }
+  }, []);
+
+  const getRiskColor = (riskLevel: RiskLevel | undefined): string => {
+    switch (riskLevel?.toLowerCase()) {
+      case 'low':
+        return 'bg-green-100 text-green-800';
+      case 'medium':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'high':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const validateRiskLevel = (input: string | undefined): RiskLevel => {
+    const level = input?.toLowerCase()?.trim() || '';
+    return ['low', 'medium', 'high'].includes(level) ? level as RiskLevel : 'medium';
+  };
+
+  const handleOpenForm = () => {
+    setEditingAlert(null);
+    setFormData({
+      title: '',
+      description: '',
+      riskLevel: 'medium',
+      radius: 15
+    });
+    setFormError('');
+    setIsFormOpen(true);
+  };
+
+  const handleCloseForm = () => {
+    setIsFormOpen(false);
+    setEditingAlert(null);
+    setFormError('');
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    
+    if (name === 'radius') {
+      // Ensure radius is a number between 0 and 30
+      const numberValue = Math.min(Math.max(0, parseInt(value) || 0), 30);
+      setFormData(prev => ({ ...prev, [name]: numberValue }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
+  };
+
+  const handleSubmitAlert = (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormError('');
+
+    if (!formData.title.trim() || !formData.description.trim()) {
+      setFormError('Title and description are required');
+      return;
+    }
+
+    setIsLoading(true);
+
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          if (editingAlert) {
+            // Update existing alert
+            const updatedAlert: Alert = {
+              ...editingAlert,
+              title: formData.title.trim(),
+              description: formData.description.trim(),
+              riskLevel: formData.riskLevel,
+              radius: formData.radius
+            };
+
+            const updatedAlerts = alerts.map(a => 
+              a.id === editingAlert.id ? updatedAlert : a
+            );
+
+            setAlerts(updatedAlerts);
+            localStorage.setItem('alerts', JSON.stringify(updatedAlerts));
+          } else {
+            // Create new alert
+            const newAlert: Alert = {
+              id: Date.now(),
+              title: formData.title.trim(),
+              description: formData.description.trim(),
+              riskLevel: formData.riskLevel,
+              radius: formData.radius,
+              location: {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude
+              },
+              timestamp: new Date().toISOString()
+            };
+
+            const updatedAlerts = [...alerts, newAlert];
+            setAlerts(updatedAlerts);
+            localStorage.setItem('alerts', JSON.stringify(updatedAlerts));
+          }
+          
+          setIsLoading(false);
+          setIsFormOpen(false);
+        },
+        (error) => {
+          console.error('Error getting location:', error);
+          setFormError('Failed to get your location. Please check your location settings and try again.');
+          setIsLoading(false);
+        },
+        { enableHighAccuracy: true }
+      );
+    } else {
+      setFormError('Geolocation is not supported by your browser');
+      setIsLoading(false);
+    }
+  };
+
+  const handleEditAlert = (alert: Alert) => {
+    setEditingAlert(alert);
+    setFormData({
+      title: alert.title,
+      description: alert.description,
+      riskLevel: alert.riskLevel,
+      radius: alert.radius
+    });
+    setFormError('');
+    setIsFormOpen(true);
+  };
+
+  const handleDeleteAlert = (id: number) => {
+    const updatedAlerts = alerts.filter(alert => alert.id !== id);
+    setAlerts(updatedAlerts);
+    localStorage.setItem('alerts', JSON.stringify(updatedAlerts));
+  };
+
+  return (
+    <div className="max-w-4xl mx-auto">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold text-gray-800">Alerts</h1>
+        <button
+          onClick={handleOpenForm}
+          className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 flex items-center"
+        >
+          <Bell className="w-5 h-5 mr-2" />
+          Create Alert
+        </button>
+      </div>
+
+      {/* Alert Form Modal */}
+      {isFormOpen && (
+        <div className="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-gray-800">
+                {editingAlert ? 'Edit Alert' : 'Create New Alert'}
+              </h2>
+              <button
+                onClick={handleCloseForm}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {formError && (
+              <div className="mb-4 p-3 bg-red-100 text-red-800 rounded-md flex items-center">
+                <AlertTriangle className="w-5 h-5 mr-2" />
+                {formError}
+              </div>
+            )}
+
+            <form onSubmit={handleSubmitAlert}>
+              <div className="mb-4">
+                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="title">
+                  Title*
+                </label>
+                <input
+                  id="title"
+                  name="title"
+                  type="text"
+                  value={formData.title}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Alert title"
+                  required
+                />
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="description">
+                  Description*
+                </label>
+                <textarea
+                  id="description"
+                  name="description"
+                  value={formData.description}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Alert description"
+                  rows={3}
+                  required
+                ></textarea>
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="riskLevel">
+                  Risk Level
+                </label>
+                <select
+                  id="riskLevel"
+                  name="riskLevel"
+                  value={formData.riskLevel}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                </select>
+              </div>
+
+              <div className="mb-6">
+                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="radius">
+                  Radius (0-30 meters): {formData.radius}m
+                </label>
+                <input
+                  id="radius"
+                  name="radius"
+                  type="range"
+                  min="0"
+                  max="30"
+                  value={formData.radius}
+                  onChange={handleInputChange}
+                  className="w-full"
+                />
+              </div>
+
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={handleCloseForm}
+                  className="mr-2 px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 flex items-center"
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      {editingAlert ? 'Update Alert' : 'Create Alert'}
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      <div className="space-y-4">
+        {alerts.map((alert: Alert) => (
+          <div key={alert.id} className="bg-white rounded-lg shadow-md p-4">
+            <div className="flex justify-between items-start">
+              <div className="flex-1">
+                <div className="flex items-center gap-3">
+                  <h3 className="text-xl font-semibold text-gray-800">{alert.title}</h3>
+                  <span className={`px-2 py-1 rounded-full text-sm font-medium ${getRiskColor(alert.riskLevel)}`}>
+                    {alert.riskLevel.charAt(0).toUpperCase() + alert.riskLevel.slice(1)} Risk
+                  </span>
+                </div>
+                <p className="text-gray-600 mt-2">{alert.description}</p>
+                <p className="text-sm text-gray-500 mt-2">
+                  Radius: {alert.radius}m
+                </p>
+                <p className="text-sm text-gray-500">
+                  {new Date(alert.timestamp).toLocaleString()}
+                </p>
+              </div>
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => handleEditAlert(alert)}
+                  className="text-blue-500 hover:text-blue-600 p-2"
+                >
+                  <Edit className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={() => handleDeleteAlert(alert.id)}
+                  className="text-red-500 hover:text-red-600 p-2"
+                >
+                  <Trash2 className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+
+        {alerts.length === 0 && (
+          <div className="text-center py-8 bg-gray-50 rounded-lg">
+            <Bell className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-600">No alerts yet. Create one to get started!</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default AlertsPage;
