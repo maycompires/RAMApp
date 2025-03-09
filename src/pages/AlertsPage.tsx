@@ -65,6 +65,7 @@ function AlertsPage() {
           localStorage.setItem('alerts', JSON.stringify(updatedAlerts));
           setNewAlert({ title: '', description: '', riskLevel: 'medium' });
           setShowCreateModal(false);
+          alert('Alerta criado com sucesso!'); // Feedback para o usuário
         },
         (error) => {
           alert('Falha ao obter localização: ' + error.message);
@@ -83,14 +84,12 @@ function AlertsPage() {
     if (!description) return;
 
     const riskInput = prompt('Editar nível de risco (baixo, médio, alto):', alert.riskLevel);
-    const radius = alert.radius ? parseInt(prompt('Editar raio (0-30 metros):', alert.radius)) : null;
 
     const updatedAlert = {
       ...alert,
       title: title.trim(),
       description: description.trim(),
       riskLevel: validateRiskLevel(riskInput),
-      ...(radius !== null && { radius: Math.min(Math.max(0, radius || alert.radius), 30) }),
     };
 
     const updatedAlerts = alerts.map((a) => (a.id === alert.id ? updatedAlert : a));
@@ -126,7 +125,6 @@ function AlertsPage() {
         </button>
       </div>
 
-      {/* Modal para criação de alertas */}
       {showCreateModal && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
@@ -203,7 +201,6 @@ function AlertsPage() {
                   </span>
                 </div>
                 <p className="text-gray-600 mt-2">{alert.description}</p>
-                {alert.radius && <p className="text-sm text-gray-500 mt-2">Raio: {alert.radius}m</p>}
                 <p className="text-sm text-gray-500">
                   {new Date(alert.timestamp).toLocaleString('pt-BR')}
                 </p>
