@@ -5,11 +5,14 @@ import { icon } from 'leaflet';
 import 'leaflet-defaulticon-compatibility';
 import 'leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css';
 
-// Coordenadas de Florianópolis
+// Coordenadas e configurações
 const FLORIANOPOLIS_CENTER = {
   lat: -27.5969,
   lng: -48.5495
 };
+
+// Raio padrão fixo para todos os alertas (em metros)
+const DEFAULT_RADIUS = 50;
 
 interface Alert {
   id: number;
@@ -76,7 +79,7 @@ function DraggableMarker({ alert, onMarkerDrag }: {
             Risk Level: <span className="font-semibold capitalize">{alert.riskLevel}</span>
           </p>
           <p className="text-sm">
-            Radius: <span className="font-semibold">{alert.radius}m</span>
+            Radius: <span className="font-semibold">{DEFAULT_RADIUS}m</span>
           </p>
           <p className="text-xs mt-2 text-gray-500">
             Arraste para reposicionar este alerta
@@ -148,7 +151,7 @@ function MapPage() {
             <React.Fragment key={alert.id}>
               <Circle
                 center={[alert.location.lat, alert.location.lng]}
-                radius={alert.radius}
+                radius={DEFAULT_RADIUS}
                 pathOptions={{
                   color: getRiskColor(alert.riskLevel),
                   fillColor: getRiskColor(alert.riskLevel),

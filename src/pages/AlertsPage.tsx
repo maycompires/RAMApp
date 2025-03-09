@@ -18,8 +18,9 @@ interface NewAlert {
   title: string;
   description: string;
   riskLevel: string;
-  radius: number;
 }
+
+const DEFAULT_RADIUS = 50;
 
 function AlertsPage() {
   const [alerts, setAlerts] = useState<Alert[]>([]);
@@ -29,7 +30,6 @@ function AlertsPage() {
     title: '',
     description: '',
     riskLevel: 'medium',
-    radius: 15,
   });
   const [editingId, setEditingId] = useState<number | null>(null);
 
@@ -63,7 +63,7 @@ function AlertsPage() {
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          const { title, description, riskLevel, radius } = currentAlert;
+          const { title, description, riskLevel } = currentAlert;
 
           if (!title.trim() || !description.trim()) {
             alert('Title and description are required!');
@@ -80,7 +80,8 @@ function AlertsPage() {
                 title: title.trim(),
                 description: description.trim(),
                 riskLevel: validateRiskLevel(riskLevel) || 'medium',
-                radius: Math.min(Math.max(0, radius), 30),
+                // Mantenha o raio original se estiver editando
+                radius: updatedAlert.radius,
               };
 
               const updatedAlerts = alerts.map((a) => (a.id === editingId ? editedAlert : a));
@@ -94,7 +95,7 @@ function AlertsPage() {
               title: title.trim(),
               description: description.trim(),
               riskLevel: validateRiskLevel(riskLevel) || 'medium',
-              radius: Math.min(Math.max(0, radius), 30),
+              radius: DEFAULT_RADIUS,
               location: {
                 lat: position.coords.latitude,
                 lng: position.coords.longitude,
@@ -108,7 +109,7 @@ function AlertsPage() {
           }
 
           // Reset state and close modal
-          setCurrentAlert({ title: '', description: '', riskLevel: 'medium', radius: 15 });
+          setCurrentAlert({ title: '', description: '', riskLevel: 'medium' });
           setShowModal(false);
           setIsEditing(false);
           setEditingId(null);
@@ -129,7 +130,6 @@ function AlertsPage() {
       title: alert.title,
       description: alert.description,
       riskLevel: alert.riskLevel,
-      radius: alert.radius
     });
     setShowModal(true);
   };
@@ -144,7 +144,7 @@ function AlertsPage() {
     const { name, value } = e.target;
     setCurrentAlert((prev) => ({
       ...prev,
-      [name]: name === 'radius' ? parseInt(value) || 0 : value,
+      [name]: value,
     }));
   };
 
@@ -155,7 +155,6 @@ function AlertsPage() {
       title: '',
       description: '',
       riskLevel: 'medium',
-      radius: 15
     });
     setShowModal(true);
   };
@@ -216,19 +215,13 @@ function AlertsPage() {
                   <option value="high">High</option>
                 </select>
               </div>
-              <div className="mb-4">
-                <label className="block text-gray-700 mb-1">Radius (0-30 meters)</label>
-                <input
-                  type="number"
-                  name="radius"
-                  value={currentAlert.radius}
-                  onChange={handleInputChange}
-                  min="0"
-                  max="30"
-                  className="w-full p-2 border rounded"
-                  required
-                />
-              </div>
+              {isEditing && (
+                <div className="mb-4">
+                  <p className="text-sm text-gray-600">
+                    Alert radius is fixed at {DEFAULT_RADIUS} meters
+                  </p>
+                </div>
+              )}
               <div className="flex justify-end space-x-2">
                 <button
                   type="button"
@@ -236,7 +229,7 @@ function AlertsPage() {
                     setShowModal(false);
                     setIsEditing(false);
                     setEditingId(null);
-                    setCurrentAlert({ title: '', description: '', riskLevel: 'medium', radius: 15 });
+                    setCurrentAlert({ title: '', description: '', riskLevel: 'medium' });
                   }}
                   className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
                 >
