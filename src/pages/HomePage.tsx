@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Map, Bell, Shield, Phone, Cloud, Droplets, Wind, Thermometer } from 'lucide-react';
+import { Map, Bell, Shield, Phone, Cloud, Droplet, Wind, Thermometer } from 'lucide-react';
 
 interface WeatherData {
   main: {
@@ -78,32 +78,32 @@ function WeatherCard() {
   if (!weather) return null;
 
   return (
-    <div className="bg-gradient-to-r from-blue-400 to-blue-600 p-6 rounded-lg shadow-lg text-white">
-      <div className="flex justify-between items-start">
+    <div className="bg-gradient-to-r from-blue-400 to-blue-600 p-4 sm:p-6 rounded-lg shadow-lg text-white">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
         <div>
-          <h3 className="text-2xl font-bold">{weather.name}</h3>
+          <h3 className="text-xl sm:text-2xl font-bold">{weather.name}</h3>
           <div className="flex items-center mt-2">
             <img 
               src={`https://openweathermap.org/img/wn/${weather.weather[0].icon}@2x.png`} 
               alt={weather.weather[0].description}
-              className="w-16 h-16 mr-2"
+              className="w-14 h-14 sm:w-16 sm:h-16 mr-2"
             />
-            <p className="text-4xl font-bold">{Math.round(weather.main.temp)}°C</p>
+            <p className="text-3xl sm:text-4xl font-bold">{Math.round(weather.main.temp)}°C</p>
           </div>
-          <p className="capitalize text-lg mt-1">{weather.weather[0].description}</p>
+          <p className="capitalize text-base sm:text-lg mt-1">{weather.weather[0].description}</p>
         </div>
-        <div className="space-y-2">
+        <div className="grid grid-cols-2 sm:grid-cols-1 gap-2 sm:space-y-2">
           <div className="flex items-center">
-            <Thermometer className="w-5 h-5 mr-2" />
-            <span>Sensação: {Math.round(weather.main.feels_like)}°C</span>
+            <Thermometer className="w-4 h-4 sm:w-5 sm:h-5 mr-2 flex-shrink-0" />
+            <span className="text-sm sm:text-base">Sensação: {Math.round(weather.main.feels_like)}°C</span>
           </div>
           <div className="flex items-center">
-            <Droplets className="w-5 h-5 mr-2" />
-            <span>Umidade: {weather.main.humidity}%</span>
+            <Droplet className="w-4 h-4 sm:w-5 sm:h-5 mr-2 flex-shrink-0" />
+            <span className="text-sm sm:text-base">Umidade: {weather.main.humidity}%</span>
           </div>
-          <div className="flex items-center">
-            <Wind className="w-5 h-5 mr-2" />
-            <span>Vento: {Math.round(weather.wind.speed * 3.6)} km/h</span>
+          <div className="flex items-center col-span-2 sm:col-span-1">
+            <Wind className="w-4 h-4 sm:w-5 sm:h-5 mr-2 flex-shrink-0" />
+            <span className="text-sm sm:text-base">Vento: {Math.round(weather.wind.speed * 3.6)} km/h</span>
           </div>
         </div>
       </div>
@@ -113,12 +113,12 @@ function WeatherCard() {
 
 function HomePage() {
   return (
-    <div className="max-w-4xl mx-auto">
-      <h1 className="text-4xl font-bold text-gray-800 mb-8">Bem-vindo ao Aplicativo de Monitoramento de Áreas de Risco </h1>
+    <div className="max-w-4xl mx-auto px-4 sm:px-6">
+      <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 mb-4 sm:mb-8 text-center sm:text-left">Bem-vindo ao Aplicativo de Monitoramento de Áreas de Risco</h1>
       
       <WeatherCard />
       
-      <div className="mt-6 grid md:grid-cols-2 gap-6">
+      <div className="mt-4 sm:mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
         <Link
           to="/map"
           className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow"

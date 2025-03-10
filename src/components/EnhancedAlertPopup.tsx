@@ -173,9 +173,9 @@ const EnhancedAlertPopup: React.FC<EnhancedAlertPopupProps> = ({ alert, isDragga
               )
               .slice(0, 5)
               .map(([key, value]) => (
-                <div key={key} className="flex items-center justify-between">
-                  <span className="capitalize">{key.replace('_', ' ')}:</span>
-                  <span className="font-medium">{value}</span>
+                <div key={key} className="flex flex-wrap items-center justify-between">
+                  <span className="capitalize mr-1">{key.replace('_', ' ')}:</span>
+                  <span className="font-medium break-words">{typeof value === 'string' && value.length > 20 ? `${value.substring(0, 20)}...` : value}</span>
                 </div>
               ))
             }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Circle, useMapEvents, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Circle, useMapEvents, useMap, ZoomControl } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { icon } from 'leaflet';
 import 'leaflet-defaulticon-compatibility';
@@ -82,6 +82,7 @@ function DraggableMarker({ alert, onMarkerDrag }: {
 
 function MapPage() {
   const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth < 768);
 
   useEffect(() => {
     const alertsFromStorage = localStorage.getItem('alerts') || '[]';
@@ -110,11 +111,26 @@ function MapPage() {
       .enhanced-popup .leaflet-popup-tip {
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
       }
+
+      @media (max-width: 640px) {
+        .enhanced-popup .leaflet-popup-content {
+          margin: 10px;
+          min-width: 220px;
+        }
+      }
     `;
     document.head.appendChild(style);
     
+    // Handler para responsividade
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    
     return () => {
       document.head.removeChild(style);
+      window.removeEventListener('resize', handleResize);
     };
   }, []);
 
@@ -150,17 +166,19 @@ function MapPage() {
   };
 
   return (
-    <div className="h-[calc(100vh-12rem)]">
-      <div className="bg-white rounded-lg shadow-md p-4 h-full">
-        <div className="mb-4 text-sm text-gray-600">
+    <div className="h-[calc(100vh-12rem)] max-h-[800px]">
+      <div className="bg-white rounded-lg shadow-md p-2 sm:p-4 h-full">
+        <div className="mb-2 sm:mb-4 text-xs sm:text-sm text-gray-600">
           <p>Você pode arrastar os marcadores para reposicionar os alertas no mapa.</p>
         </div>
         
         <MapContainer
           center={[FLORIANOPOLIS_CENTER.lat, FLORIANOPOLIS_CENTER.lng]}
           zoom={13}
-          style={{ height: '93%', width: '100%' }}
+          style={{ height: '92%', width: '100%' }}
+          zoomControl={false}
         >
+          <ZoomControl position="bottomright" />
           <TileLayer
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'

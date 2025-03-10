@@ -66,7 +66,7 @@ function AlertsPage() {
           const { title, description, riskLevel } = currentAlert;
 
           if (!title.trim() || !description.trim()) {
-            alert('Title and description are required!');
+            alert('Título e descrição são obrigatórios!');
             return;
           }
 
@@ -115,11 +115,11 @@ function AlertsPage() {
           setEditingId(null);
         },
         (error) => {
-          alert('Failed to get location: ' + error.message);
+          alert('Falha ao obter localização: ' + error.message);
         }
       );
     } else {
-      alert('Geolocation is not supported by your browser');
+      alert('Geolocalização não é suportada pelo seu navegador');
     }
   };
 
@@ -160,28 +160,28 @@ function AlertsPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-800">Alerts</h1>
+    <div className="max-w-4xl mx-auto px-4 sm:px-6">
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Alertas</h1>
         <button
           onClick={handleCreateNewClick}
-          className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 flex items-center"
+          className="bg-blue-500 text-white w-full sm:w-auto px-4 py-2 rounded-lg hover:bg-blue-600 flex items-center justify-center sm:justify-start"
         >
           <Bell className="w-5 h-5 mr-2" />
-          Create Alert
+          Criar Alerta
         </button>
       </div>
 
       {/* Modal for creating or editing alerts */}
       {showModal && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h2 className="text-2xl font-bold mb-4">
-              {isEditing ? 'Edit Alert' : 'Create New Alert'}
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-4 sm:p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <h2 className="text-xl sm:text-2xl font-bold mb-4">
+              {isEditing ? 'Editar Alerta' : 'Criar Novo Alerta'}
             </h2>
             <form onSubmit={handleSaveAlert}>
               <div className="mb-4">
-                <label className="block text-gray-700 mb-1">Title</label>
+                <label className="block text-gray-700 mb-1">Título</label>
                 <input
                   type="text"
                   name="title"
@@ -192,7 +192,7 @@ function AlertsPage() {
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-gray-700 mb-1">Description</label>
+                <label className="block text-gray-700 mb-1">Descrição</label>
                 <textarea
                   name="description"
                   value={currentAlert.description}
@@ -203,22 +203,22 @@ function AlertsPage() {
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-gray-700 mb-1">Risk Level</label>
+                <label className="block text-gray-700 mb-1">Nível de Risco</label>
                 <select
                   name="riskLevel"
                   value={currentAlert.riskLevel}
                   onChange={handleInputChange}
                   className="w-full p-2 border rounded"
                 >
-                  <option value="low">Low</option>
-                  <option value="medium">Medium</option>
-                  <option value="high">High</option>
+                  <option value="low">Baixo</option>
+                  <option value="medium">Médio</option>
+                  <option value="high">Alto</option>
                 </select>
               </div>
               {isEditing && (
                 <div className="mb-4">
                   <p className="text-sm text-gray-600">
-                    Alert radius is fixed at {DEFAULT_RADIUS} meters
+                    O raio do alerta é fixo em {DEFAULT_RADIUS} metros
                   </p>
                 </div>
               )}
@@ -233,13 +233,13 @@ function AlertsPage() {
                   }}
                   className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
                 >
-                  Cancel
+                  Cancelar
                 </button>
                 <button
                   type="submit"
                   className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
                 >
-                  {isEditing ? 'Save Changes' : 'Create'}
+                  {isEditing ? 'Salvar Alterações' : 'Criar'}
                 </button>
               </div>
             </form>
@@ -250,25 +250,25 @@ function AlertsPage() {
       <div className="space-y-4">
         {alerts.map((alert) => (
           <div key={alert.id} className="bg-white rounded-lg shadow-md p-4">
-            <div className="flex justify-between items-start">
+            <div className="flex flex-col sm:flex-row justify-between sm:items-start">
               <div className="flex-1">
-                <div className="flex items-center gap-3">
-                  <h3 className="text-xl font-semibold text-gray-800">{alert.title}</h3>
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2 sm:mb-0">
+                  <h3 className="text-lg sm:text-xl font-semibold text-gray-800">{alert.title}</h3>
                   <span
-                    className={`px-2 py-1 rounded-full text-sm font-medium ${getRiskColor(
+                    className={`px-2 py-1 rounded-full text-xs sm:text-sm font-medium ${getRiskColor(
                       alert.riskLevel
                     )}`}
                   >
-                    {alert.riskLevel?.charAt(0).toUpperCase() + alert.riskLevel?.slice(1)} Risk
+                    Risco {alert.riskLevel?.charAt(0).toUpperCase() + alert.riskLevel?.slice(1)}
                   </span>
                 </div>
                 <p className="text-gray-600 mt-2">{alert.description}</p>
-                <p className="text-sm text-gray-500 mt-2">Radius: {alert.radius}m</p>
-                <p className="text-sm text-gray-500">
+                <p className="text-xs sm:text-sm text-gray-500 mt-2">Raio: {alert.radius}m</p>
+                <p className="text-xs sm:text-sm text-gray-500">
                   {new Date(alert.timestamp).toLocaleString()}
                 </p>
               </div>
-              <div className="flex space-x-2">
+              <div className="flex mt-3 sm:mt-0 justify-end space-x-2">
                 <button
                   onClick={() => handleEditClick(alert)}
                   className="text-blue-500 hover:text-blue-600 p-2"
@@ -289,7 +289,7 @@ function AlertsPage() {
         {alerts.length === 0 && (
           <div className="text-center py-8 bg-gray-50 rounded-lg">
             <Bell className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-600">No alerts yet. Create one to get started!</p>
+            <p className="text-gray-600">Nenhum alerta ainda. Crie um para começar!</p>
           </div>
         )}
       </div>
