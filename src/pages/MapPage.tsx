@@ -4,6 +4,7 @@ import 'leaflet/dist/leaflet.css';
 import { icon } from 'leaflet';
 import 'leaflet-defaulticon-compatibility';
 import 'leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css';
+import EnhancedAlertPopup from '../components/EnhancedAlertPopup';
 
 // Coordenadas e configurações
 const FLORIANOPOLIS_CENTER = {
@@ -70,21 +71,10 @@ function DraggableMarker({ alert, onMarkerDrag }: {
       eventHandlers={eventHandlers}
       position={[position.lat, position.lng]}
       ref={markerRef}
+      className={`marker-icon-${alert.riskLevel.toLowerCase()}`}
     >
-      <Popup>
-        <div>
-          <h3 className="font-bold">{alert.title}</h3>
-          <p className="text-sm">{alert.description}</p>
-          <p className="text-sm mt-2">
-            Nivel de Risco: <span className="font-semibold capitalize">{alert.riskLevel}</span>
-          </p>
-          <p className="text-sm">
-            Raio: <span className="font-semibold">{DEFAULT_RADIUS}m</span>
-          </p>
-          <p className="text-xs mt-2 text-gray-500">
-            Arraste para reposicionar este alerta
-          </p>
-        </div>
+      <Popup className="enhanced-popup" maxWidth={320} minWidth={280}>
+        <EnhancedAlertPopup alert={alert} isDraggable={true} />
       </Popup>
     </Marker>
   );
@@ -96,6 +86,36 @@ function MapPage() {
   useEffect(() => {
     const alertsFromStorage = localStorage.getItem('alerts') || '[]';
     setAlerts(JSON.parse(alertsFromStorage));
+    
+    // Adicionar estilos CSS para ícones de marcadores personalizados
+    const style = document.createElement('style');
+    style.textContent = `
+      .marker-icon-low {
+        filter: hue-rotate(120deg) brightness(1.2);
+      }
+      .marker-icon-medium {
+        filter: hue-rotate(30deg) brightness(1.2);
+      }
+      .marker-icon-high {
+        filter: hue-rotate(-30deg) brightness(1.2);
+      }
+      .enhanced-popup .leaflet-popup-content-wrapper {
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+      }
+      .enhanced-popup .leaflet-popup-content {
+        margin: 12px;
+        min-width: 260px;
+      }
+      .enhanced-popup .leaflet-popup-tip {
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+      }
+    `;
+    document.head.appendChild(style);
+    
+    return () => {
+      document.head.removeChild(style);
+    };
   }, []);
 
   const getRiskColor = (riskLevel: string): string => {
