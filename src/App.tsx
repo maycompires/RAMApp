@@ -7,6 +7,7 @@ import AlertsPage from './pages/AlertsPage';
 import SafetyPage from './pages/SafetyPage';
 import EmergencyPage from './pages/EmergencyPage';
 import LoginPage from './pages/LoginPage';
+import Footer from './components/Footer';
 
 // Define the NavLink component props interface
 interface NavLinkProps {
@@ -49,7 +50,7 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100 flex flex-col">
       {/* Cabeçalho */}
       <header className="bg-white shadow-md">
         <div className="container mx-auto px-4">
@@ -110,7 +111,7 @@ function App() {
       </header>
 
       {/* Conteúdo Principal */}
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 flex-grow">
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/map" element={<MapPage />} />
@@ -120,6 +121,9 @@ function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
+
+      {/* Rodapé */}
+      <Footer />
     </div>
   );
 }

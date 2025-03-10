@@ -1,13 +1,124 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Map, Bell, Shield, Phone } from 'lucide-react';
+import { Map, Bell, Shield, Phone, Cloud, Droplets, Wind, Thermometer } from 'lucide-react';
+
+interface WeatherData {
+  main: {
+    temp: number;
+    humidity: number;
+    feels_like: number;
+  };
+  weather: {
+    description: string;
+    icon: string;
+    main: string;
+  }[];
+  wind: {
+    speed: number;
+  };
+  name: string;
+}
+
+function WeatherCard() {
+  const [weather, setWeather] = useState<WeatherData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchWeather = async () => {
+      setLoading(true);
+      try {
+        // Get user's location
+        navigator.geolocation.getCurrentPosition(async (position) => {
+          const { latitude, longitude } = position.coords;
+          
+          // Get API key from environment variables
+          const apiKey = import.meta.env.VITE_OPENWEATHER_API_KEY;
+          const response = await fetch(
+            `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&units=metric&appid=${apiKey}`
+          );
+          
+          if (!response.ok) {
+            throw new Error('Falha ao obter dados climáticos');
+          }
+          
+          const data = await response.json();
+          setWeather(data);
+          setLoading(false);
+        }, 
+        (err) => {
+          setError('Permissão de localização negada. Não é possível mostrar o clima.');
+          setLoading(false);
+        });
+      } catch (err) {
+        setError('Erro ao obter dados climáticos');
+        setLoading(false);
+      }
+    };
+
+    fetchWeather();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="bg-white p-6 rounded-lg shadow-md">
+        <p className="text-center text-gray-600">Carregando informações climáticas...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-white p-6 rounded-lg shadow-md">
+        <p className="text-center text-red-500">{error}</p>
+      </div>
+    );
+  }
+
+  if (!weather) return null;
+
+  return (
+    <div className="bg-gradient-to-r from-blue-400 to-blue-600 p-6 rounded-lg shadow-lg text-white">
+      <div className="flex justify-between items-start">
+        <div>
+          <h3 className="text-2xl font-bold">{weather.name}</h3>
+          <div className="flex items-center mt-2">
+            <img 
+              src={`https://openweathermap.org/img/wn/${weather.weather[0].icon}@2x.png`} 
+              alt={weather.weather[0].description}
+              className="w-16 h-16 mr-2"
+            />
+            <p className="text-4xl font-bold">{Math.round(weather.main.temp)}°C</p>
+          </div>
+          <p className="capitalize text-lg mt-1">{weather.weather[0].description}</p>
+        </div>
+        <div className="space-y-2">
+          <div className="flex items-center">
+            <Thermometer className="w-5 h-5 mr-2" />
+            <span>Sensação: {Math.round(weather.main.feels_like)}°C</span>
+          </div>
+          <div className="flex items-center">
+            <Droplets className="w-5 h-5 mr-2" />
+            <span>Umidade: {weather.main.humidity}%</span>
+          </div>
+          <div className="flex items-center">
+            <Wind className="w-5 h-5 mr-2" />
+            <span>Vento: {Math.round(weather.wind.speed * 3.6)} km/h</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function HomePage() {
   return (
     <div className="max-w-4xl mx-auto">
       <h1 className="text-4xl font-bold text-gray-800 mb-8">Bem-vindo ao Aplicativo de Monitoramento de Áreas de Risco </h1>
       
-      <div className="grid md:grid-cols-2 gap-6">
+      <WeatherCard />
+      
+      <div className="mt-6 grid md:grid-cols-2 gap-6">
         <Link
           to="/map"
           className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow"
