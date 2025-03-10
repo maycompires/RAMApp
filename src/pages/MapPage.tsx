@@ -73,7 +73,7 @@ function DraggableMarker({ alert, onMarkerDrag }: {
       ref={markerRef}
       className={`marker-icon-${alert.riskLevel.toLowerCase()}`}
     >
-      <Popup className="enhanced-popup" maxWidth={320} minWidth={280}>
+      <Popup className="enhanced-popup compact-popup" maxWidth={240} minWidth={220}>
         <EnhancedAlertPopup alert={alert} isDraggable={true} />
       </Popup>
     </Marker>
@@ -88,7 +88,7 @@ function MapPage() {
     const alertsFromStorage = localStorage.getItem('alerts') || '[]';
     setAlerts(JSON.parse(alertsFromStorage));
     
-    // Adicionar estilos CSS para ícones de marcadores personalizados
+    // Adicionar estilos CSS para ícones de marcadores personalizados e popup
     const style = document.createElement('style');
     style.textContent = `
       .marker-icon-low {
@@ -105,17 +105,23 @@ function MapPage() {
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
       }
       .enhanced-popup .leaflet-popup-content {
-        margin: 12px;
-        min-width: 260px;
+        margin: 10px;
+        padding: 0;
       }
       .enhanced-popup .leaflet-popup-tip {
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
       }
-
+      .compact-popup .leaflet-popup-content-wrapper {
+        font-size: 11px;
+      }
+      .compact-popup .leaflet-popup-content {
+        margin: 8px;
+      }
+      
       @media (max-width: 640px) {
         .enhanced-popup .leaflet-popup-content {
-          margin: 10px;
-          min-width: 220px;
+          margin: 8px;
+          min-width: 180px;
         }
       }
     `;

@@ -124,58 +124,63 @@ const EnhancedAlertPopup: React.FC<EnhancedAlertPopupProps> = ({ alert, isDragga
   };
 
   return (
-    <div className="enhanced-alert-popup">
+    <div className="enhanced-alert-popup compact-popup">
       {/* Header with title and risk level */}
-      <div className="mb-2 flex justify-between items-start">
-        <h3 className="font-bold text-lg text-gray-800">{alert.title}</h3>
-        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getRiskLevelColor(alert.riskLevel)}`}>
+      <div className="flex justify-between items-start gap-2">
+        <h3 className="font-bold text-base text-gray-800 truncate">{alert.title}</h3>
+        <span className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-medium ${getRiskLevelColor(alert.riskLevel)}`}>
           {alert.riskLevel.charAt(0).toUpperCase() + alert.riskLevel.slice(1)}
         </span>
       </div>
       
-      {/* Description */}
-      <p className="text-sm text-gray-700 mb-3 border-b pb-2">{alert.description}</p>
+      {/* Description - limite de 60 caracteres */}
+      <p className="text-xs text-gray-700 mt-1 mb-2 border-b border-gray-100 pb-2">
+        {alert.description.length > 60 
+          ? `${alert.description.substring(0, 60)}...` 
+          : alert.description}
+      </p>
       
-      {/* Location info */}
-      <div className="flex items-start gap-2 mb-2">
-        <MapPin className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
-        <div className="text-sm text-gray-700">
-          <p>{getAddressDisplay()}</p>
-          <div className="text-xs text-gray-500 mt-1">
-            Lat: {alert.location.lat.toFixed(6)}, Lng: {alert.location.lng.toFixed(6)}
-          </div>
+      {/* Location info - simplificado */}
+      <div className="flex items-center gap-1.5 mb-1.5">
+        <MapPin className="w-3 h-3 text-gray-500 flex-shrink-0" />
+        <div className="text-xs text-gray-700 truncate">
+          <p className="truncate">{getAddressDisplay()}</p>
         </div>
       </div>
       
-      {/* Time and radius info */}
-      <div className="grid grid-cols-2 gap-2 mb-3">
-        <div className="flex items-center gap-1.5">
-          <Calendar className="w-4 h-4 text-gray-500" />
-          <span className="text-xs text-gray-700">{formatDate(alert.timestamp)}</span>
+      {/* Time and radius info - compacto em linha */}
+      <div className="flex items-center justify-between mb-2 text-[10px] text-gray-600">
+        <div className="flex items-center gap-1">
+          <Calendar className="w-3 h-3 text-gray-500" />
+          <span>{formatDate(alert.timestamp)}</span>
         </div>
-        <div className="flex items-center gap-1.5">
-          <AlertTriangle className="w-4 h-4 text-gray-500" />
-          <span className="text-xs text-gray-700">Raio: {alert.radius}m</span>
+        <div className="flex items-center gap-1">
+          <AlertTriangle className="w-3 h-3 text-gray-500" />
+          <span>Raio: {alert.radius}m</span>
         </div>
       </div>
       
-      {/* Location details */}
+      {/* Coordenadas */}
+      <div className="text-[10px] text-gray-500 mb-1.5">
+        Lat: {alert.location.lat.toFixed(5)}, Lng: {alert.location.lng.toFixed(5)}
+      </div>
+      
+      {/* Location details - mais compacto */}
       {!locationInfo.loading && !locationInfo.error && locationInfo.address && (
-        <div className="bg-gray-50 p-2 rounded-md text-xs text-gray-700 mb-2">
-          <h4 className="font-semibold text-gray-800 flex items-center gap-1 mb-1">
-            <Info className="w-3.5 h-3.5" /> Detalhes da área
+        <div className="bg-gray-50 p-1.5 rounded text-[10px] text-gray-700">
+          <h4 className="font-medium text-gray-800 flex items-center gap-1">
+            <Info className="w-3 h-3" /> Detalhes
           </h4>
-          <div className="grid grid-cols-1 gap-1">
+          <div className="mt-1">
             {Object.entries(locationInfo.address)
               .filter(([key, value]) => 
                 value && 
-                !['lat', 'lon', 'country_code', 'house_number'].includes(key)
+                ['city', 'suburb', 'road'].includes(key)
               )
-              .slice(0, 5)
               .map(([key, value]) => (
-                <div key={key} className="flex flex-wrap items-center justify-between">
-                  <span className="capitalize mr-1">{key.replace('_', ' ')}:</span>
-                  <span className="font-medium break-words">{typeof value === 'string' && value.length > 20 ? `${value.substring(0, 20)}...` : value}</span>
+                <div key={key} className="flex items-center justify-between">
+                  <span className="capitalize mr-1">{key === 'city' ? 'Cidade' : key === 'suburb' ? 'Bairro' : key === 'road' ? 'Rua' : key}:</span>
+                  <span className="font-medium truncate max-w-[120px]">{value}</span>
                 </div>
               ))
             }
@@ -185,8 +190,8 @@ const EnhancedAlertPopup: React.FC<EnhancedAlertPopupProps> = ({ alert, isDragga
       
       {/* Draggable message */}
       {isDraggable && (
-        <p className="text-xs text-gray-500 italic border-t pt-2 mt-2">
-          Arraste para reposicionar este alerta
+        <p className="text-[10px] text-gray-500 italic mt-1.5 text-center">
+          Arraste para reposicionar
         </p>
       )}
     </div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, ChangeEvent, FormEvent } from 'react';
-import { Bell, Trash2, Edit } from 'lucide-react';
+import { Bell, Trash2, Edit, MapPin, Calendar, AlertTriangle } from 'lucide-react';
 
 interface Alert {
   id: number;
@@ -50,6 +50,19 @@ function AlertsPage() {
         return 'bg-red-100 text-red-800';
       default:
         return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getRiskBorder = (riskLevel: string | undefined) => {
+    switch (riskLevel?.toLowerCase()) {
+      case 'low':
+        return 'border-green-500';
+      case 'medium':
+        return 'border-yellow-500';
+      case 'high':
+        return 'border-red-500';
+      default:
+        return 'border-gray-500';
     }
   };
 
@@ -159,6 +172,16 @@ function AlertsPage() {
     setShowModal(true);
   };
 
+  const formatDate = (dateString: string): string => {
+    return new Date(dateString).toLocaleString('pt-BR', { 
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric', 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    });
+  };
+
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6">
       <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
@@ -249,7 +272,10 @@ function AlertsPage() {
 
       <div className="space-y-4">
         {alerts.map((alert) => (
-          <div key={alert.id} className="bg-white rounded-lg shadow-md p-4">
+          <div 
+            key={alert.id} 
+            className={`bg-white rounded-lg shadow-md p-4 border-l-4 ${getRiskBorder(alert.riskLevel)}`}
+          >
             <div className="flex flex-col sm:flex-row justify-between sm:items-start">
               <div className="flex-1">
                 <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2 sm:mb-0">
@@ -263,21 +289,32 @@ function AlertsPage() {
                   </span>
                 </div>
                 <p className="text-gray-600 mt-2">{alert.description}</p>
-                <p className="text-xs sm:text-sm text-gray-500 mt-2">Raio: {alert.radius}m</p>
-                <p className="text-xs sm:text-sm text-gray-500">
-                  {new Date(alert.timestamp).toLocaleString()}
-                </p>
+                
+                <div className="mt-3 grid grid-cols-2 gap-2 text-xs sm:text-sm text-gray-500">
+                  <div className="flex items-center gap-1.5">
+                    <MapPin className="w-3.5 h-3.5 text-gray-400" />
+                    <span>Lat: {alert.location.lat.toFixed(4)}, Lng: {alert.location.lng.toFixed(4)}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <AlertTriangle className="w-3.5 h-3.5 text-gray-400" />
+                    <span>Raio: {alert.radius}m</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 col-span-2">
+                    <Calendar className="w-3.5 h-3.5 text-gray-400" />
+                    <span>{formatDate(alert.timestamp)}</span>
+                  </div>
+                </div>
               </div>
               <div className="flex mt-3 sm:mt-0 justify-end space-x-2">
                 <button
                   onClick={() => handleEditClick(alert)}
-                  className="text-blue-500 hover:text-blue-600 p-2"
+                  className="text-blue-500 hover:text-blue-600 p-2 rounded-full hover:bg-blue-50 transition-colors"
                 >
                   <Edit className="w-5 h-5" />
                 </button>
                 <button
                   onClick={() => handleDeleteAlert(alert.id)}
-                  className="text-red-500 hover:text-red-600 p-2"
+                  className="text-red-500 hover:text-red-600 p-2 rounded-full hover:bg-red-50 transition-colors"
                 >
                   <Trash2 className="w-5 h-5" />
                 </button>
