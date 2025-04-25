@@ -70,7 +70,7 @@ Após iniciar o servidor de desenvolvimento com `npm run dev`, abra seu navegado
 - **Emergência**: Contatos e protocolos de emergência.
 - **Login**: Autenticação de usuário.
 
-##🌐 Acesso Online
+## 🌐 Acesso Online
 A aplicação está disponível para uso online no seguinte endereço:
 
 [Acessar RAMApp](https://ram-app-git-main-maycom-pires-projects.vercel.app)
