@@ -172,16 +172,16 @@ function MapPage() {
   };
 
   return (
-    <div className="h-[calc(100vh-12rem)] max-h-[800px]">
-      <div className="bg-white rounded-lg shadow-md p-2 sm:p-4 h-full">
-        <div className="mb-2 sm:mb-4 text-xs sm:text-sm text-gray-600">
+    <div className="h-[calc(100vh-5rem)]">
+      <div className="bg-white rounded-lg shadow-md p-1 sm:p-2 h-full relative">
+        <div className="absolute top-2 left-2 right-2 z-10 bg-white bg-opacity-90 rounded px-2 py-1 text-xs text-gray-600 shadow-sm">
           <p>Você pode arrastar os marcadores para reposicionar os alertas no mapa.</p>
         </div>
         
         <MapContainer
           center={[FLORIANOPOLIS_CENTER.lat, FLORIANOPOLIS_CENTER.lng]}
           zoom={13}
-          style={{ height: '92%', width: '100%' }}
+          style={{ height: '100%', width: '100%' }}
           zoomControl={false}
         >
           <ZoomControl position="bottomright" />

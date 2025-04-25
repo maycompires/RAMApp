@@ -111,10 +111,14 @@ function App() {
       </header>
 
       {/* Conteúdo Principal */}
-      <main className="container mx-auto px-4 py-8 flex-grow">
+      <main className="container mx-auto px-4 py-4 flex-grow">
         <Routes>
           <Route path="/" element={<HomePage />} />
-          <Route path="/map" element={<MapPage />} />
+          <Route path="/map" element={
+            <div className="px-0 -mx-4 sm:px-0 sm:mx-0">
+              <MapPage />
+            </div>
+          } />
           <Route path="/alerts" element={<AlertsPage />} />
           <Route path="/safety" element={<SafetyPage />} />
           <Route path="/emergency" element={<EmergencyPage />} />
