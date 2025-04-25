@@ -82,7 +82,7 @@ A aplicação está disponível para uso online no seguinte endereço:
 - No Mapa, interaja com os marcadores para visualizar ou criar alertas de risco.
 - Utilize a seção de Emergência para acessar contatos rápidos ou a seção de Segurança para diretrizes em situações de risco.
 
-- **Nota**: Certifique-se de ter uma conexão estável com a internet para acessar os dados em tempo real, como informações meteorológicas e serviços de geocodificação.
+**Nota**: Certifique-se de ter uma conexão estável com a internet para acessar os dados em tempo real, como informações meteorológicas e serviços de geocodificação.
 
 ## 📁 Estrutura do Projeto
 
