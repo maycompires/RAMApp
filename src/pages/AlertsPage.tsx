@@ -285,7 +285,9 @@ function AlertsPage() {
                       alert.riskLevel
                     )}`}
                   >
-                    Risco {alert.riskLevel?.charAt(0).toUpperCase() + alert.riskLevel?.slice(1)}
+                    Risco {alert.riskLevel?.toLowerCase() === 'low' ? 'Baixo' : 
+                           alert.riskLevel?.toLowerCase() === 'medium' ? 'Médio' : 
+                           alert.riskLevel?.toLowerCase() === 'high' ? 'Alto' : ''}
                   </span>
                 </div>
                 <p className="text-gray-600 mt-2">{alert.description}</p>

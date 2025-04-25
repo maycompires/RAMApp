@@ -129,7 +129,9 @@ const EnhancedAlertPopup: React.FC<EnhancedAlertPopupProps> = ({ alert, isDragga
       <div className="flex justify-between items-start gap-2">
         <h3 className="font-bold text-base text-gray-800 truncate">{alert.title}</h3>
         <span className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-medium ${getRiskLevelColor(alert.riskLevel)}`}>
-          {alert.riskLevel.charAt(0).toUpperCase() + alert.riskLevel.slice(1)}
+          {alert.riskLevel.toLowerCase() === 'low' ? 'Baixo' : 
+           alert.riskLevel.toLowerCase() === 'medium' ? 'Médio' : 
+           alert.riskLevel.toLowerCase() === 'high' ? 'Alto' : ''}
         </span>
       </div>
       
